@@ -1,0 +1,117 @@
+%YAML 1.2
+---
+name: WebAssembly Text Format
+file_extensions:
+  - wat
+  - wast
+scope: source.wasmtext
+
+variables:
+  name: "(\\$)((?:\\w|\\.|\\+|-|\\*|\\/|\\\\|\\^|~|=|<|>|!|\\?|@|#|\\$|%|&|\\||:|'|\\`)+)"
+
+contexts:
+  main:
+    - include: comments
+    - include: parens
+
+  comments:
+    - match: (;).*$\n?
+      scope: comment.line.semicolon.wasmtext
+      captures:
+        1: punctuation.definition.comment.wasmtext
+
+  parens:
+    - match: '\('
+      scope: punctuation.definition.group.begin.wasmtext
+      push:
+        - meta_scope: meta.group.wasmtext
+        - match: '\)'
+          scope: punctuation.definition.group.end.wasmtext
+          pop: true
+        - include: expressions
+        - include: parens
+    - match: '\)'
+      scope: invalid.illegal.stray-bracket-end.wasmtext
+
+  ##############################################################################
+
+  expressions:
+    - include: comments
+    - include: numbers
+    - include: strings
+    - include: names
+    - include: keywords
+
+  ##############################################################################
+
+  numbers:
+    - match: \b((0(x|X)\h*)|([0-9]+\.?[0-9]*)|(\.[0-9]+))\b
+      scope: constant.numeric.wasmtext
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.wasmtext
+      push:
+        - meta_scope: string.quoted.double.wasmtext
+        - match: '(")|(\n)'
+          captures:
+            1: punctuation.definition.string.end.wasmtext
+            2: invalid.illegal.newline.wasmtext
+          pop: true
+        - match: \\.
+          scope: constant.character.escape.wasmtext
+
+  names:
+    - match: (block|br|br_if|loop)\s+({{name}})
+      captures:
+        1: keyword.control.wasmtext
+        2: entity.name.label.wasmtext
+    - match: (call|func)\s+({{name}})
+      captures:
+        1: keyword.control.wasmtext
+        2: entity.name.function.wasmtext
+    - match: '{{name}}'
+      scope: entity.name.wasmtext
+
+  keywords:
+    - match: \b(?:(i32)\.(load(?:8|16)_[su]|store(?:8|16))|(i64)\.(load(?:8|16|32)_[su]|store(?:8|16|32))|([fi](?:32|64))\.(load|store))\b
+      captures:
+        1: storage.type.wasmtext
+        2: keyword.operator.assignment.wasmtext
+        3: storage.type.wasmtext
+        4: keyword.operator.assignment.wasmtext
+        5: storage.type.wasmtext
+        6: keyword.operator.assignment.wasmtext
+
+    - match: \b(?:(i(?:32|64))\.(add|sub|mul|div_[su]|rem_[su]|eq|eqz|ne|[lg][et]_[su])|(f(?:32|64))\.(add|sub|mul|div|abs|neg|copysign|ceil|floor|trunc|nearest|eq|ne|[lg][et]|sqrt|min|max))\b
+      captures:
+        1: storage.type.wasmtext
+        2: keyword.operator.arithmetic.wasmtext
+        3: storage.type.wasmtext
+        4: keyword.operator.arithmetic.wasmtext
+
+    - match: \b(i(?:32|64))\.(and|clz|ctz|or|popcnt|rot[lr]|shl|shr_[su]|xor)\b
+      captures:
+        1: storage.type.wasmtext
+        2: keyword.operator.bitwise.wasmtext
+
+    - match: \b(?:([fi](?:32|64))\.(eq|ne)|(i(?:32|64))\.(eqz|ge_[su]|gt_[su]|le_[su]|lt_[su])|(f(?:32|64))\.([lg][et]))\b
+      captures:
+        1: storage.type.wasmtext
+        2: keyword.operator.logical.wasmtext
+        3: storage.type.wasmtext
+        4: keyword.operator.logical.wasmtext
+        5: storage.type.wasmtext
+        6: keyword.operator.logical.wasmtext
+
+    - match: \b(f(?:32|64)\.convert_[su]\/i(?:32|64)|f32\.demote\/f64|f32\.reinterpret\/i32|f64\.promote\/f32|f64\.reinterpret\/i64|i32\.reinterpret\/f32|i(?:32|64)\.trunc_[su]\/f(?:32|64)|i32\.wrap\/i64|i64\.extend_[su]\/i32|i64\.reinterpret\/f64)\b
+      scope: keyword.operator.modifier.wasmtext
+
+    - match: \b(block|br|br-if|br-table|call|call_indirect|current_memory|data|drop|elem|export|func|get_global|get_local|global|grow_memory|if|import|local|loop|memory|module|nop|param|result|return|select|set_global|set_local|start|table|tee_local|type|unreachable)\b
+      scope: keyword.wasmtext
+
+    - match: (?:f32|f64|i32|i64)
+      scope: storage.type.wasmtext
+
+    - match: \b(const)\b
+      scope: storage.modifier.wasmtext
