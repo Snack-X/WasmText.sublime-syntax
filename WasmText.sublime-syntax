@@ -58,6 +58,8 @@ contexts:
             1: punctuation.definition.string.end.wasmtext
             2: invalid.illegal.newline.wasmtext
           pop: true
+        - match: \\\h\h
+          scope: constant.character.escape.wasmtext
         - match: \\.
           scope: constant.character.escape.wasmtext
 
@@ -66,10 +68,12 @@ contexts:
       captures:
         1: keyword.control.wasmtext
         2: entity.name.label.wasmtext
-    - match: (call|func)\s+({{name}})
+
+    - match: (call|func|start)\s+({{name}})
       captures:
         1: keyword.control.wasmtext
         2: entity.name.function.wasmtext
+
     - match: '{{name}}'
       scope: entity.name.wasmtext
 
@@ -107,11 +111,11 @@ contexts:
     - match: \b(f(?:32|64)\.convert_[su]\/i(?:32|64)|f32\.demote\/f64|f32\.reinterpret\/i32|f64\.promote\/f32|f64\.reinterpret\/i64|i32\.reinterpret\/f32|i(?:32|64)\.trunc_[su]\/f(?:32|64)|i32\.wrap\/i64|i64\.extend_[su]\/i32|i64\.reinterpret\/f64)\b
       scope: keyword.operator.modifier.wasmtext
 
-    - match: \b(block|br|br-if|br-table|call|call_indirect|current_memory|data|drop|elem|export|func|get_global|get_local|global|grow_memory|if|import|local|loop|memory|module|nop|param|result|return|select|set_global|set_local|start|table|tee_local|type|unreachable)\b
+    - match: \b(block|br|br_if|br_table|call|call_indirect|current_memory|data|drop|elem|export|func|get_global|get_local|global|grow_memory|if|import|local|loop|memory|module|nop|param|result|return|select|set_global|set_local|start|table|tee_local|type|unreachable)\b
       scope: keyword.wasmtext
 
     - match: (?:f32|f64|i32|i64)
       scope: storage.type.wasmtext
 
-    - match: \b(const)\b
+    - match: \b(const|mut)\b
       scope: storage.modifier.wasmtext
